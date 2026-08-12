@@ -10,13 +10,13 @@ import { authenticate } from "../middlewares/auth.js";
 const router = express.Router();
 
 router.get(
-  "/conversations/:id/messages",
+  "/:id/messages",
   authenticate,
   getMessages
 );
 
 router.post(
-  "/conversations/:id/messages",
+  "/:id/messages",
   authenticate,
   sendMessage
 );

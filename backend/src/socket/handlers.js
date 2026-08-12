@@ -36,10 +36,21 @@ export const registerSocketHandlers = (io, socket) => {
             const isClient =
                 conversation.client_id === socket.user.id;
 
-            const isAgent =
+            let isAgent =
                 conversation.agent_id === socket.user.id;
 
+            if (socket.user.role === "agent" && !conversation.agent_id) {
+                await pool.query(
+                    "UPDATE conversations SET agent_id = $1, status = 'en_cours' WHERE id = $2",
+                    [socket.user.id, id]
+                );
+                isAgent = true;
+                conversation.status = 'en_cours';
+            }
+
             if (!isClient && !isAgent) {
+                if (socket.user.role === "agent") {
+                }
                 return socket.emit("error", {
                     message: "You are not allowed to join this conversation",
                 });
