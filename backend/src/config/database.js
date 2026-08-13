@@ -1,32 +1,39 @@
-import pg from "pg";
+import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const { Pool } = pg;
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT || 5432,
+    dialect: "postgres",
 
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT || 5432,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-});
+    logging: false,
+  }
+);
 
-pool.on("connect", () => {
-  console.log("✅ PostgreSQL connected");
-});
+export const connectDB = async () => {
+  try {
+    await sequelize.authenticate();
 
-pool.on("error", (err) => {
-  console.error("❌ PostgreSQL error:", err);
-});
-pool.query("SELECT NOW()")
-  .then((result) => {
-    console.log("✅ Database connected!");
-    console.log("🕐 Database time:", result.rows[0].now);
-  })
-  .catch((error) => {
-    console.error("❌ Database connection failed:");
+    console.log("✅ PostgreSQL + Sequelize connected");
+
+    console.log(
+      `📦 Database: ${process.env.DB_NAME}`
+    );
+  } catch (error) {
+    console.error(
+      "❌ Sequelize database connection failed:"
+    );
+
     console.error(error.message);
-  });
-export default pool;
+
+    process.exit(1);
+  }
+};
+
+export default sequelize;
