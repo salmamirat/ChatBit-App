@@ -1,23 +1,36 @@
-import "dotenv/config";
-import http from "http";
+const http = require("http");
+const { Server } = require("socket.io");
 
-import app from "./src/app.js";
-import { initSocket } from "./src/config/socket.js";
+require("dotenv").config();
 
-const PORT = process.env.PORT || 5000;
+const app = require("./app");
+const sequelize = require("./config/database");
 
-const httpServer = http.createServer(app);
+require("./models");
 
+const setupSocket = require("./socket/socket");
 
-initSocket(httpServer);
+const server = http.createServer(app);
 
-
-httpServer.listen(PORT, () => {
-  console.log(
-    `🚀 ChatBit server running on port ${PORT}`
-  );
-
-  console.log(
-    `🌐 http://localhost:${PORT}`
-  );
+const io = new Server(server, {
+  cors: {
+    origin: "*"
+  }
 });
+
+setupSocket(io);
+
+const PORT = process.env.PORT || 3000;
+
+sequelize
+  .sync()
+  .then(() => {
+    console.log("Database connected");
+
+    server.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.log("Database error:", error.message);
+  });
