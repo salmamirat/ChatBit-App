@@ -2,8 +2,7 @@ import api from "./api";
 
 export async function getConversations() {
   const response = await api.get("/conversations");
-
-  return response.data;
+  return response.data.conversations;
 }
 
 export async function createConversation(subject) {
@@ -19,7 +18,7 @@ export async function getMessages(id) {
     `/conversations/${id}/messages`
   );
 
-  return response.data;
+  return response.data.messages;
 }
 
 export async function closeConversation(id) {

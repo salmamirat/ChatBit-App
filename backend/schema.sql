@@ -1,44 +1,70 @@
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    full_name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) DEFAULT 'client',
-    is_online BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+
+    role VARCHAR(20) NOT NULL DEFAULT 'client'
+        CHECK (role IN ('client', 'agent')),
+
+    is_online BOOLEAN NOT NULL DEFAULT false,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE conversations (
+
+CREATE TABLE IF NOT EXISTS conversations (
     id SERIAL PRIMARY KEY,
+
     subject VARCHAR(255) NOT NULL,
-    status VARCHAR(20) DEFAULT 'en_attente',
-    client_id INTEGER NOT NULL,
-    agent_id INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    closed_at TIMESTAMP,
 
-    CONSTRAINT fk_client
-        FOREIGN KEY (client_id)
-        REFERENCES users(id),
+    status VARCHAR(20) NOT NULL DEFAULT 'en_attente'
+        CHECK (status IN ('en_attente', 'en_cours', 'fermee')),
 
-    CONSTRAINT fk_agent
-        FOREIGN KEY (agent_id)
+    client_id INTEGER NOT NULL
         REFERENCES users(id)
+        ON DELETE CASCADE,
+
+    agent_id INTEGER
+        REFERENCES users(id)
+        ON DELETE SET NULL,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    closed_at TIMESTAMP NULL
 );
 
-CREATE TABLE messages (
+
+CREATE TABLE IF NOT EXISTS messages (
     id SERIAL PRIMARY KEY,
-    conversation_id INTEGER NOT NULL,
-    sender_id INTEGER NOT NULL,
-    content TEXT NOT NULL,
-    is_read BOOLEAN DEFAULT FALSE,
-    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT fk_conversation
-        FOREIGN KEY (conversation_id)
-        REFERENCES conversations(id),
+    conversation_id INTEGER NOT NULL
+        REFERENCES conversations(id)
+        ON DELETE CASCADE,
 
-    CONSTRAINT fk_sender
-        FOREIGN KEY (sender_id)
+    sender_id INTEGER NOT NULL
         REFERENCES users(id)
+        ON DELETE CASCADE,
+
+    content TEXT NOT NULL,
+
+    is_read BOOLEAN NOT NULL DEFAULT false,
+
+    sent_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+
+CREATE INDEX IF NOT EXISTS idx_conversations_client
+ON conversations(client_id);
+
+CREATE INDEX IF NOT EXISTS idx_conversations_agent
+ON conversations(agent_id);
+
+CREATE INDEX IF NOT EXISTS idx_conversations_status
+ON conversations(status);
+
+CREATE INDEX IF NOT EXISTS idx_messages_conversation
+ON messages(conversation_id);
+
+CREATE INDEX IF NOT EXISTS idx_messages_sent_at
+ON messages(sent_at);
