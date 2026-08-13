@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import {  ActivityIndicator, View} from "react-native";
+import { useEffect, useState } from "react";
+import {  ActivityIndicator,  View} from "react-native";
 import { router } from "expo-router";
 import { useAuthStore } from "../src/store/authStore";
 
@@ -8,7 +8,17 @@ export default function Index() {
     (state) => state.user
   );
 
+  const [ready, setReady] = useState(false);
+
   useEffect(() => {
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) {
+      return;
+    }
+
     if (!user) {
       router.replace("/(auth)/login");
       return;
@@ -19,7 +29,7 @@ export default function Index() {
     } else {
       router.replace("/(client)/home");
     }
-  }, [user]);
+  }, [ready, user]);
 
   return (
     <View

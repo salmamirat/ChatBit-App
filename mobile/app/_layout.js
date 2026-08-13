@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { QueryClient, QueryClientProvider} from "@tanstack/react-query";
+import {  QueryClient,  QueryClientProvider} from "@tanstack/react-query";
+
 import SocketProvider from "../src/context/SocketContext";
 
 const queryClient = new QueryClient();
