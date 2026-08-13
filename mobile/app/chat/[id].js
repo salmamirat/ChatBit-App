@@ -30,6 +30,9 @@ export default function Chat() {
   const [isTyping, setIsTyping] =
     useState(false);
 
+  const [isOtherOnline, setIsOtherOnline] =
+    useState(true);
+
   const [closed, setClosed] =
     useState(false);
 
@@ -78,7 +81,7 @@ export default function Chat() {
           Number(data.conversationId) ===
           Number(id)
         ) {
-          setIsTyping(data.typing);
+          setIsTyping(data.isTyping);
         }
       }
     );
@@ -107,6 +110,15 @@ export default function Chat() {
       );
     });
 
+    socket.on(
+      "presence:update",
+      ({ userId, isOnline }) => {
+        if (userId !== user?.id) {
+          setIsOtherOnline(isOnline);
+        }
+      }
+    );
+
     return () => {
       socket.emit(
         "conversation:leave",
@@ -117,9 +129,8 @@ export default function Chat() {
 
       socket.off("message:new");
       socket.off("typing:update");
-      socket.off(
-        "conversation:updated"
-      );
+      socket.off("conversation:updated");
+      socket.off("presence:update");
       socket.off("error");
     };
   }, [socket, id]);
@@ -205,8 +216,11 @@ export default function Chat() {
             Support
           </Text>
 
-          <Text style={styles.online}>
-            ● En ligne
+          <Text style={[
+            styles.online,
+            !isOtherOnline && styles.offline
+          ]}>
+            {isOtherOnline ? "● En ligne" : "● Hors ligne"}
           </Text>
         </View>
 
@@ -315,6 +329,10 @@ const styles = StyleSheet.create({
     color: colors.green,
     fontSize: 12,
     marginTop: 2
+  },
+
+  offline: {
+    color: colors.gray
   },
 
   close: {

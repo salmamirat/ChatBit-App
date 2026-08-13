@@ -1,4 +1,5 @@
-import {  View,  Text,  FlatList,  Pressable,  StyleSheet} from "react-native";
+import { useEffect } from "react";
+import {  View,  Text,  FlatList,  Pressable,  ActivityIndicator,  StyleSheet} from "react-native";
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { getConversations} from "../../src/services/conversationService";
@@ -11,12 +12,42 @@ export default function AgentHome() {
     (state) => state.logout
   );
 
+  const user = useAuthStore(
+    (state) => state.user
+  );
+
+  useEffect(() => {
+    if (!user) {
+      router.replace("/(auth)/login");
+    }
+  }, [user]);
+
   const {
-    data: conversations = []
+    data: conversations = [],
+    isLoading,
+    isError
   } = useQuery({
     queryKey: ["conversations"],
     queryFn: getConversations
   });
+
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>
+          Erreur de chargement. Réessayez.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -90,6 +121,20 @@ const styles = StyleSheet.create({
 
   logout: {
     color: colors.red
+  },
+
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.background
+  },
+
+  errorText: {
+    color: colors.red,
+    fontSize: 15,
+    textAlign: "center",
+    paddingHorizontal: 30
   },
 
   empty: {

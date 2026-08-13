@@ -1,5 +1,4 @@
 import pool from "../config/database.js";
-
 export const registerSocketHandlers = (io, socket) => {
 
     socket.on("conversation:join", async ({ conversationId }) => {

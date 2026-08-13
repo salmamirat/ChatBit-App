@@ -1,5 +1,5 @@
-import { useState } from "react";
-import {  View,  Text,  FlatList,  Pressable,  TextInput,  Modal,  StyleSheet} from "react-native";
+import { useState, useEffect } from "react";
+import {  View,  Text,  FlatList,  Pressable,  TextInput,  Modal,  ActivityIndicator,  StyleSheet} from "react-native";
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { getConversations, createConversation} from "../../src/services/conversationService";
@@ -12,6 +12,16 @@ export default function ClientHome() {
     (state) => state.logout
   );
 
+  const user = useAuthStore(
+    (state) => state.user
+  );
+
+  useEffect(() => {
+    if (!user) {
+      router.replace("/(auth)/login");
+    }
+  }, [user]);
+
   const [modalVisible, setModalVisible] =
     useState(false);
 
@@ -20,7 +30,9 @@ export default function ClientHome() {
 
   const {
     data: conversations = [],
-    refetch
+    refetch,
+    isLoading,
+    isError
   } = useQuery({
     queryKey: ["conversations"],
     queryFn: getConversations
@@ -44,6 +56,24 @@ export default function ClientHome() {
         error.message
       );
     }
+  }
+
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>
+          Erreur de chargement. Réessayez.
+        </Text>
+      </View>
+    );
   }
 
   return (
@@ -173,6 +203,20 @@ const styles = StyleSheet.create({
   logout: {
     color: colors.red,
     fontSize: 13
+  },
+
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.background
+  },
+
+  errorText: {
+    color: colors.red,
+    fontSize: 15,
+    textAlign: "center",
+    paddingHorizontal: 30
   },
 
   empty: {
